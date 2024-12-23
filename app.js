@@ -61,7 +61,7 @@
 
   app.use(logger('dev'));
   app.use(cors({
-    origin: "http://localhost:5173", // Replace with your frontend URL
+    origin: "https://ads-runningontv.vercel.app", // Replace with your frontend URL
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
