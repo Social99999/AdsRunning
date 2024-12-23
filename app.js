@@ -60,18 +60,16 @@
   app.set('view engine', 'ejs');
 
   app.use(logger('dev'));
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
+  app.use(cors({
+    origin: "http://localhost:5173", // Replace with your frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(cookieParser());
   app.use(express.static(path.join(__dirname, 'public')));
-  // Enable CORS for all routes
-  app.use(cors({
-    origin: "*", // Allow requests from any origin
-    credentials: true, // Allow credentials to be sent in requests
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allow these methods
-    preflightContinue: false, // Continue with the request after checking the preflight request
-    optionsSuccessStatus: 204 // Status code to use for successful OPTIONS request
-  }));
 
   app.use('/', indexRouter);
   app.use('/users', usersRouter);

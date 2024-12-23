@@ -1,5 +1,6 @@
 const User = require('../models/user.models');
 const jwt = require('jsonwebtoken');
+const Ads = require('../models/ads.models');
 
 // JWT secret key
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
@@ -26,7 +27,21 @@ exports.createUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.find();
-        res.status(200).json({ success: true, data: users });
+        
+        // Map through users and add active time for each
+        const usersWithActiveTime = users.map(user => {
+            const activeTime = user.calculateTotalActiveTime();
+            return {
+                ...user.toObject(),
+                activeTime: {
+                    totalTime: activeTime.formatted,
+                    hours: activeTime.hours,
+                    minutes: activeTime.minutes
+                }
+            };
+        });
+
+        res.status(200).json({ success: true, data: usersWithActiveTime });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching users', error: error.message });
     }
@@ -39,7 +54,21 @@ exports.getUserById = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        res.status(200).json({ success: true, data: user });
+
+        // Calculate active time using the instance method
+        const activeTime = user.calculateTotalActiveTime();
+
+        // Create response object with user data and active time
+        const responseData = {
+            ...user.toObject(),
+            activeTime: {
+                totalTime: activeTime.formatted,
+                hours: activeTime.hours,
+                minutes: activeTime.minutes
+            }
+        };
+
+        res.status(200).json({ success: true, data: responseData });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error fetching user', error: error.message });
     }
@@ -132,3 +161,38 @@ exports.handleSocketLogout = async (token) => {
         console.error('Socket logout error:', error);
     }
 };
+
+// Add this new controller method
+exports.getActiveTime = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        const activeTime = user.calculateTotalActiveTime();
+        res.status(200).json({ 
+            success: true, 
+            data: {
+                totalTime: activeTime.formatted,
+                hours: activeTime.hours,
+                minutes: activeTime.minutes
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error calculating active time', 
+            error: error.message 
+        });
+    }
+};
+
+exports.createadsss = async (req, res) => {
+    try {
+        const ads = Ads.create(req.body);
+        res.status(201).json({ success: true, message: 'Ads created successfully', data: ads });
+    } catch (error) {
+        res.status(400).json({ success: false, message: 'Error creating ads', error: error.message });
+    }
+}

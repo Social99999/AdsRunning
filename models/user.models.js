@@ -71,6 +71,10 @@ const userSchema = new mongoose.Schema({
     lastActive: {
         type: Date,
         default: Date.now
+    },
+    countTotalActiveTime: {
+        type: String,
+        default: 0
     }
 });
 
@@ -78,6 +82,7 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.updateLoginTime = function() {
     this.loginTime = new Date();
     this.lastActive = new Date();
+    this.logoutTime = null;
     return this.save();
 };
 
@@ -106,6 +111,27 @@ userSchema.methods.comparePassword = async function(enteredPassword) {
 userSchema.methods.updateLastActive = function() {
     this.lastActive = new Date();
     return this.save();
+};
+
+// Add this method after other schema methods
+userSchema.methods.calculateTotalActiveTime = function() {
+    let totalMinutes = 0;
+    
+    if (this.loginTime && this.logoutTime) {
+        // Calculate duration between login and logout
+        const duration = this.logoutTime - this.loginTime;
+        totalMinutes = Math.floor(duration / (1000 * 60)); // Convert milliseconds to minutes
+    }
+    
+    // Format the duration
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    return {
+        hours,
+        minutes,
+        formatted: `${hours} hour${hours !== 1 ? 's' : ''} and ${minutes} minute${minutes !== 1 ? 's' : ''}`
+    };
 };
 
 const User = mongoose.model('User', userSchema);

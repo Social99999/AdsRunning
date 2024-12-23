@@ -8,9 +8,16 @@ const {
   updateUser, 
   deleteUser, 
   login, 
-  logout 
+  logout, 
+  createadsss
 } = require('../controller/user.controller');
-const adsController = require('../controller/ads.controller');
+const {
+  createAd,
+  getAllAds,
+  getAdById,
+  updateAd,
+  deleteAd
+} = require('../controller/ads.controller');
 /* GET home page. */
 
 // POST /auth/login
@@ -25,24 +32,24 @@ router.post('/loginUser', login); // Login a user
 router.post('/logoutUser', logout); // Logout a user
 
 router.get('/', getAllUsers); // Get all usersed route)
-router.get('/:id', getUserById); // Get a user by IDed route)
+// router.get('/:id', getUserById); // Get a user by IDed route)
 router.put('/:id', updateUser); // Update a user by IDed route)
 router.delete('/:id', deleteUser); // Delete a user by ID (protected route)
 
+router.post('/createadsss', createadsss);
 
-
-router.post('/', adsController.createAd);
+router.post('/ads', createAd);
 
 // Get all ads - Public route
-router.get('/', adsController.getAllAds);
+router.get('/ads', getAllAds);
 
 // Get single ad by ID - Public route
-router.get('/:id', adsController.getAdById);
+router.get('/ads/:id',  getAdById);
 
 // Update ad - Protected route
-router.put('/:id', adsController.updateAd);
+router.put('/ads/:id', updateAd);
 
 // Delete ad - Protected route
-router.delete('/:id', adsController.deleteAd);
+router.delete('/ads/:id', deleteAd);
 
 module.exports = router;
