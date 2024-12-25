@@ -1,6 +1,7 @@
 const User = require('../models/user.models');
 const jwt = require('jsonwebtoken');
 const Ads = require('../models/ads.models');
+const UserLoginHistory = require('../models/userLoginHistory.model');
 
 // JWT secret key
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
@@ -120,6 +121,13 @@ exports.login = async (req, res) => {
             io.emit('userStatus', { userId: user._id, status: 'online' });
         }
 
+        // After successful login, create login history entry
+        const loginHistory = new UserLoginHistory({
+            userId: user._id,
+            loginTime: new Date()
+        });
+        await loginHistory.save();
+
         res.status(200).json({ 
             success: true, 
             message: 'Login successful', 
@@ -140,6 +148,21 @@ exports.logout = async (req, res) => {
         }
 
         await user.updateLogoutTime();
+
+        // Update the latest login history entry for this user
+        await UserLoginHistory.findOneAndUpdate(
+            { 
+                userId: req.user._id,
+                logoutTime: null 
+            },
+            { 
+                logoutTime: new Date() 
+            },
+            { 
+                sort: { loginTime: -1 } 
+            }
+        );
+
         res.status(200).json({ success: true, message: 'Logout successful' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Error during logout', error: error.message });
@@ -149,16 +172,31 @@ exports.logout = async (req, res) => {
 // Add this new function to handle socket-based logouts
 exports.handleSocketLogout = async (token) => {
     try {
-        // Verify the token
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.id);
+        console.log(decoded);
         
         if (user) {
             await user.updateLogoutTime();
             console.log(`User ${user._id} logged out via socket disconnect`);
         }
+        
+        // Update the latest login history entry for this user
+        await UserLoginHistory.findOneAndUpdate(
+            { 
+                userId: decoded.id,
+                logoutTime: null 
+                
+            },
+            { 
+                logoutTime: new Date() 
+            },
+            { 
+                sort: { loginTime: -1 } 
+            }
+        );
     } catch (error) {
-        console.error('Socket logout error:', error);
+        console.error('Error updating login history on socket disconnect:', error);
     }
 };
 
@@ -196,3 +234,36 @@ exports.createadsss = async (req, res) => {
         res.status(400).json({ success: false, message: 'Error creating ads', error: error.message });
     }
 }
+
+// Add new function to get login history
+exports.getLoginHistoryById = async (req, res) => {
+    try {
+        const loginHistory = await UserLoginHistory.find({ userId: req.params.id })
+            .sort({ loginTime: -1 })
+            .populate('userId', 'username email contact');
+
+        // Map through the login history and add formatted duration for each entry
+        const historyWithDuration = loginHistory.map(entry => {
+            const duration = entry.calculateTotalActiveTime();
+            return {
+                ...entry.toObject(),
+                duration: {
+                    totalTime: duration.formatted,
+                    hours: duration.hours,
+                    minutes: duration.minutes
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: historyWithDuration
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching login history',
+            error: error.message
+        });
+    }
+};

@@ -9,7 +9,8 @@ const {
   deleteUser, 
   login, 
   logout, 
-  createadsss
+  createadsss,
+  getLoginHistoryById
 } = require('../controller/user.controller');
 const {
   createAd,
@@ -52,4 +53,6 @@ router.put('/ads/:id', updateAd);
 // Delete ad - Protected route
 router.delete('/ads/:id', deleteAd);
 
+
+router.get('/login-history/:id', getLoginHistoryById);
 module.exports = router;
