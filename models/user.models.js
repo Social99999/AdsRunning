@@ -51,6 +51,9 @@ const userSchema = new mongoose.Schema({
             match: [/^[0-9]{6}$/, 'Please enter a valid 6-digit pincode']
         }
     },
+    category: {
+        type: String,
+    },
     loginTime: {
         type: Date,
         default: null
@@ -75,7 +78,8 @@ const userSchema = new mongoose.Schema({
     countTotalActiveTime: {
         type: String,
         default: 0
-    }
+    },
+
 });
 
 // Update login time

@@ -6,11 +6,12 @@ const Ads = require('../models/ads.models');
 exports.createAd = async (req, res) => {
     console.log("sddf");
     try {
-        const { companyName, contactNumber, image } = req.body;
+        const { companyName, contactNumber, category, image } = req.body;
 
         const newAd = new Ads({
             companyName,
             contactNumber,
+            category,
             image
         });
 
@@ -70,11 +71,11 @@ exports.getAdById = async (req, res) => {
 // Update an ad by ID
 exports.updateAd = async (req, res) => {
     try {
-        const { companyName, contactNumber, image } = req.body;
+        const { companyName, contactNumber, category, image } = req.body;
 
         const updatedAd = await Ads.findByIdAndUpdate(
             req.params.id,
-            { companyName, contactNumber, image },
+            { companyName, contactNumber, category, image },
             { new: true, runValidators: true }
         );
 
